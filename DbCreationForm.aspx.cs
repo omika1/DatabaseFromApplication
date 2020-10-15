@@ -12,7 +12,8 @@ using System.Data.Sql;
 using System.Threading;
 using System.IO;
 using System.Text.RegularExpressions;
-
+using System.Reflection;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace DatabaseFromApplication
 {   
@@ -26,49 +27,36 @@ namespace DatabaseFromApplication
 
         protected void Page_Load(object sender, EventArgs e)
         {
-           
-            string mainconn = ConfigurationManager.ConnectionStrings["Myconnection"].ConnectionString;
-            SqlConnection sqlconn = new SqlConnection(mainconn);
-            var count = 0;
-            sqlconn.Open();
-           
-            using (SqlCommand cmd = new SqlCommand("SELECT DISTINCT name from sys.databases", sqlconn))
+            /*if (!this.IsPostBack)
             {
-                using (dr = cmd.ExecuteReader())
-                {
-                    //DatabaseList.Items.Remove(dr.ToString());
-                    while (dr.Read())
-                    {
-                        DatabaseList.Items.Insert(0,dr[0].ToString());
-                        //DatabaseList.AppendDataBoundItems(dr[0].ToString());
-                        //DatabaseList.Items.Add(dr[0].ToString());
-                        Console.WriteLine(dr[0].ToString());
 
-                    }
-                    count++;
+                string mainconn = ConfigurationManager.ConnectionStrings["Myconnection"].ConnectionString;
+                SqlConnection sqlconn = new SqlConnection(mainconn);
+                var count = 0;
+                sqlconn.Open();
+
+                using (SqlCommand cmd = new SqlCommand("SELECT DISTINCT name from sys.databases", sqlconn))
+                {
+                    DatabaseList.Items.Clear();
+                    DatabaseList.DataSource = cmd.ExecuteReader();
+                    DatabaseList.DataTextField = "name";
+                    DatabaseList.DataValueField = "name";
+                    DatabaseList.DataBind();
                 }
-            }
+                string filename = "C:\\Users\\mishro\\source\\repos\\DatabaseFromApplication\\Projects\\Check.sql";
+                List<string> line = File.ReadAllLines(filename).ToList();
+                line.Remove("USE[" + DatabaseList.Text + "]");
+
+                sqlconn.Close();
+
+
+            }*/
             string filename = "C:\\Users\\mishro\\source\\repos\\DatabaseFromApplication\\Projects\\Check.sql";
             List<string> line = File.ReadAllLines(filename).ToList();
-            foreach (string lin in line)
-            {
-                if (lin.Contains("USE"))
-                {
-                    var val=lin.IndexOf("USE");
-                    lin.Remove(val, 6);
-                }
-            }
-            
-            //line.RemoveAt(0);            
-            File.WriteAllLines(filename, line);
-            sqlconn.Close();
-            
+            line.Remove("USE[" + DatabaseBox1.Text + "]");
         }
 
-        protected void TextBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
+       
 
         public void Button1_Click(object sender, EventArgs e)
         {
@@ -96,64 +84,50 @@ namespace DatabaseFromApplication
 
             }
 
-        }
-
-        public void Button2_Click(object sender, EventArgs e)
-        {
+        
+        
+                   
             try
             {
-                SqlConnection sqlconn = new SqlConnection(@"Data source =INGSMISHROL5C ; Database='" + DatabaseList.Text + "';Trusted_Connection=True");
+                SqlConnection sqlconn = new SqlConnection(@"Data source =INGSMISHROL5C ; Database='" + DatabaseBox1.Text + "';Trusted_Connection=True");
 
                 sqlconn.Open();
                 string filename = "C:\\Users\\mishro\\source\\repos\\DatabaseFromApplication\\Projects\\Check.sql";
                 List<string> lines = File.ReadAllLines(filename).ToList();
                 
-                //lines.Add("Test");
-                lines.Insert(0, "USE[" + DatabaseList.Text + "]");
-                File.WriteAllLines(filename, lines);
-                string text = File.ReadAllText(filename);
-                //Label1 = lines;
-                //private const string seperator = "[PRIMARY]";
-                //foreach (string line in lines) 
-                //  { string[] commandStrings = line.Split(seperator); } 
-
                 
+                //lines.Add("Test");
+                lines.Insert(0, "USE[" + DatabaseBox1.Text + "]");
+                //File.WriteAllLines(filename, lines);
+                string text = File.ReadAllText(filename);           
 
-                // split script on GO command
 
                 IEnumerable<string> commandStrings = Regex.Split(text, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
                 Label2.Text = commandStrings.ToString();
-                //@"^\s*GO\s*$"
-                //@"\bG\S*O\b"
                 foreach (string commandString in commandStrings)
                 {
-                    if (!string.IsNullOrWhiteSpace(commandString.Trim()))
+                    try
                     {
-                        using (var command = new SqlCommand(commandString, sqlconn))
+                        if (!string.IsNullOrWhiteSpace(commandString.Trim()))
                         {
-                            Label2.Text = commandStrings.ToString();
-                            command.ExecuteNonQuery();
+                            using (var command = new SqlCommand(commandString, sqlconn))
+                            {
+                                Label2.Text = commandStrings.ToString();
+                                command.ExecuteNonQuery();
+                            }
                         }
+                        Label2.Text = "<b>" + "[Applications],[Database],[Hosts],[Relationships],[Storage] tables are successfully created in " + DatabaseBox1.Text + " !!";
+
                     }
+
+                    catch (Exception ex)
+                    {
+                        Label1.Text = "<b>" + ex.Message;
+                    }
+                    sqlconn.Close();
                 }
-                sqlconn.Close();
 
-                
-                //Label1 = text;
-                //Console.WriteLine(writer);
-                //String sqlquery = "CREATE TABLE" + " " + TableNameBox.Text + "(" + ColumnName.Text + " " + "char(50))";
-                //String sqlquery = "CREATE TABLE" + " " + TableNameBox.Text + "(" + ColumnName.Text + ")";
-                //String sqlquery = text;
-
-                //SqlCommand sqlcomm2 = new SqlCommand(sqlquery, sqlconn);
-
-                //sqlcomm2.ExecuteNonQuery();
-                //sqlconn.Close();
-                //List<string> line = File.ReadAllLines(filename).ToList();
-                lines.Insert(0," ");
-                File.WriteAllLines(filename, lines);
-
-                Label2.Text = "<b>" + TableNameBox.Text + " with " + ColumnName.Text + "<b> is successfully created in " + DatabaseList.Text + " !!";
+                //Label2.Text = "<b>" + TableNameBox.Text + " with " + ColumnName.Text + "<b> is successfully created in " + DatabaseList.Text + " !!";
 
             }
 
@@ -163,16 +137,20 @@ namespace DatabaseFromApplication
             }
         }
 
-        protected void DatabaseList_SelectedIndexChanged(object sender, EventArgs e)
+        protected void CheckBox1_CheckedChanged(object sender, EventArgs e)
         {
-
+            /*if (CheckBox1.Enabled)
+            {
+                SqlConnection sqlconn = new SqlConnection(@"Data source =INGSMISHROL5C ; Database=Registration ; Trusted_Connection=True");
+                sqlconn.Open();
+                //string Date = Convert.ToDateTime(CreatedDate.Text).ToString("yyyy-MM-dd");
+                string test = "test";
+                String sqlquery = "INSERT INTO UserDetails(FirstName,LastName,UserName,Password,Email,UserRole,CreatedDate) values('" + test + "','" + test + "','" + test + "','" + test + "','" + test + "','" + test + "','" + test + "')";
+                sqlcomm = new SqlCommand(sqlquery, sqlconn);
+                sqlcomm.ExecuteNonQuery();
+                sqlconn.Close();
+                Label1.Text = "<b>" + "User is successfully created " + " !!";
+            }*/
         }
-
-
-        protected void DataList1_SelectedIndexChanged1(object sender, EventArgs e)
-        {
-
-        }
-
     }
 }

@@ -1,11 +1,13 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="DbCreationForm.aspx.cs" Inherits="DatabaseFromApplication.DbCreationForm" %>
+﻿@model DatabaseFromApplication.Models.SignupUserModel
+
+@{
+    Layout = null;
+}
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head >
-    
-    
+<html>
+<head>
     <meta name="viewport" content="width=device-width" />
     <title>Signup</title>
     <meta charset="utf-8">
@@ -93,43 +95,62 @@
                     text-decoration: underline;
                 }
     </style>
-</head>
-<body>
-    <form id="form1" runat="server">
-        <div>
-            <table align="center"
-                style="width:700px;"height:744px;">
-                <tr>
-                    <td class="auto-style1" colspan="2" align="center">
-                        <h1 class="auto-style2"> Project Creation Page</h1>
 
-                    </td>
-                 </tr>
-                   <tr><td class="auto-style1"></td></tr>
-                <tr></tr>
-              </table>
-            <table align="center">
-                <tr>
-                  <td> Enter the Project name to be created :</td><td> <asp:TextBox ID="DatabaseBox1" runat="server" ></asp:TextBox></td>
-                    
-                 </tr>
-                <tr>
-                  <td> Insert Data into Table :</td>
-                  <td> <asp:CheckBox ID="CheckBox1" runat="server" OnCheckedChanged="CheckBox1_CheckedChanged" ></asp:CheckBox></td>
-               
-                </tr>
-                <tr>  
-                    
-                    <td align ="center"><asp:Button ID="Button1" runat="server" Text="Create Database" OnClick="Button1_Click"></asp:Button></td>
-               
-                </tr>
-                <tr ><td > <asp:Label ID="Label1" runat="server" ></asp:Label></td></tr> 
-                <tr><td><asp:Label ID="Label2" runat="server" ></asp:Label></td></tr>
-               
-            
-            </table>
+</head>
+
+    <body>
+        <div class="container">
+
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-horizontal">
+
+                <h4>Signup Page</h4>
+                <hr />
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Email, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Password, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.ConfirmPassword, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.ConfirmPassword, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.ConfirmPassword, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check-label"><input type="checkbox" required="required"> I accept the <a href="#">Terms of Use</a> &amp; <a href="#">Privacy Policy</a></label>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-lg" class="btn btn-default">Sign Up</button>
+                </div>
+
+                <div class="text-center">Already have an account? <a href="#">Login here</a></div>
+            </div>
+
+        }
+
+        <div>
+            @Html.ActionLink("Back to List", "Index")
         </div>
-       
-    </form>
-</body>
+            </div>
+    </body>
+
+
 </html>
